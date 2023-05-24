@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Price Table</title>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/signalr/5.0.11/signalr.min.js"></script> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Price Table</h1>
+    <p>
+        <span id="connectionStatus">Connection status: Connecting...</span>
+        <br>
+        <br>
+        Select currency:
+        <select id="currencyName">
+            <!-- Options will be dynamically populated -->
+        </select>
+        &emsp;Select Start Date:
+        <input type="text" id="startdatepicker" placeholder="Select date">
+        &emsp;Select End Date:
+        <input type="text" id="enddatepicker" placeholder="Select date">
+        <button onclick="fetchPrices()">Show Prices</button>
+    </p>
+    <table id="priceTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Date Time</th>
+            </tr>
+        </thead>
+        <tbody id="priceTableBody">
+        </tbody>
+    </table>
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    
+    <script>
+        var connectionStatusElement = document.getElementById("connectionStatus");
+
+        var connection = new signalR.HubConnectionBuilder().withUrl("/statushub").build();
+        connection.on("StatusUpdate", function (status) {
+            console.log("Connection status:", status);
+            connectionStatusElement.textContent = "Connection status: " + status;
+        });
+
+        connection.start().then(function () {
+            console.log("SignalR connection established");
+            connectionStatusElement.textContent = "Connection status: Connected";
+        }).catch(function (error) {
+            console.error("Error establishing SignalR connection:", error);
+            connectionStatusElement.textContent = "Connection status: Disconnected";
+        });
+
+        const currencyNameSelect = document.getElementById("currencyName");
+        const startdatepicker = flatpickr("#startdatepicker", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            defaultHour: 0,
+            defaultMinute: 0,
+        });
+        
+        const enddatepicker = flatpickr("#enddatepicker", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            defaultHour: 0,
+            defaultMinute: 0,
+        });
+
+        const URL_ENDPOINT = 'http://127.0.0.1:5000'
+
+        fetch(URL_ENDPOINT+'/currencies')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(currency => {
+                    const option = document.createElement("option");
+                    option.value = currency;
+                    option.text = currency;
+                    currencyNameSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching currency names:", error);
+            });
+
+        function fetchPrices() {
+            const currencyName = currencyNameSelect.value;
+            const selectedStartDate = startdatepicker.selectedDates[0].toISOString();
+            const selectedEndDate = enddatepicker.selectedDates[0].toISOString();
+
+            fetch(URL_ENDPOINT+'/fetch?currencyName='+currencyName+'&startDate='+selectedStartDate+'&endDate='+selectedEndDate)
+                .then(response => response.json())
+                .then(data => {
+                    const priceTableBody = document.getElementById("priceTableBody");
+                    priceTableBody.innerHTML = "";
+
+                    data.forEach(item => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${item.Currency}</td>
+                            <td>${item.Price}</td>
+                            <td>${item.dateTime}</td>
+                        `;
+                        priceTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching prices:", error);
+                });
+        }
+        // Rest of your code...
+    </script>
+</body>
+</html>
