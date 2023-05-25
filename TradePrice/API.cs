@@ -1,23 +1,28 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using DBManager;
+using DataBase;
+using SignalR;
 
 
 namespace API;
 class APIServer
 {
+	private DBManager dbManager;
+
+	public APIServer()
+	{
+		dbManager = new DBManager();
+	}
+
 	public async Task Run()
 	{
 		var builder = WebApplication.CreateBuilder();
 
 		// Add services to the container.
-		//builder.Services.AddSignalR();
-		builder.Services.AddCors();
-
 		builder.Services.AddSignalR();
+		builder.Services.AddCors();
 
 		var app = builder.Build();
 
@@ -29,32 +34,46 @@ class APIServer
 		});
 
 		app.UseRouting();
+		
 
 		app.UseEndpoints(endpoints =>
 		{
-			//endpoints.MapHub<StatusHub>("/statushub");
+			endpoints.MapHub<StatusHub>("/statushub");
 
 			endpoints.MapGet("/fetch", (HttpContext httpContext) =>
 			{
-				string currencyName = httpContext.Request.Query["currencyName"];
-				DateTime startDate = Convert.ToDateTime(httpContext.Request.Query["startDate"]);
-				DateTime endDate = Convert.ToDateTime(httpContext.Request.Query["endDate"]);
 
-				if (currencyName != null && startDate != null)
-				{
-					var db = new DataBaseIO();
-					return JsonConvert.SerializeObject(db.FetchPrice(currencyName, startDate, endDate));
-					
-				}
-				return null;
+
+				string? currencyName = httpContext.Request.Query["currencyName"];
+
+
+
+				string? startDate = httpContext.Request.Query["startDate"];
+
+
+				string? endDate = httpContext.Request.Query["endDate"];
+
+				httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
+
+
+				httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
+
+
+
+				httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
+
+				if (currencyName == null || startDate == null || endDate == null)
+					return null;
+				return dbManager.FetchPrice(currencyName, startDate, endDate);
 			});
-
 
 			endpoints.MapGet("/currencies", (HttpContext httpContext) =>
 			{
-				var db = new DataBaseIO();
-				return JsonConvert.SerializeObject(db.FetchCurrencies());
+				return dbManager.FetchCurrencies();
 			});
+
 		});
 
 		app.Run();

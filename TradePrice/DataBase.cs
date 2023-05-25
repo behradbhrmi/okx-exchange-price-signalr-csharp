@@ -1,26 +1,61 @@
-﻿using Models;
-//using StackExchange.Redis;
+﻿using StackExchange.Redis;
+using Newtonsoft.Json;
+using Models;
 
-namespace DBManager;
-
+namespace DataBase;
 class DBManager
 {
-	public void WriteDB()
+	private readonly StackExchange.Redis.IDatabase _cache;
+	private DataBaseIO _db;
+
+	public DBManager()
 	{
+		ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379");
+		_cache = redis.GetDatabase();
+		_db = new DataBaseIO();
 	}
 
-	public void WriteRedis()
+	public string FetchPrice(string currencyName, string startDate, string endDate)
 	{
+
+		string key = $"{currencyName}/{startDate}/{endDate}";
+
+		var data = FetchRedis(key);
+
+		if (data == null)
+		{
+			var dbData = DataSerializer(
+				_db.FetchPrice(currencyName,
+				Convert.ToDateTime(startDate),
+				Convert.ToDateTime(endDate)));
+
+			WriteRedis(key, dbData);
+			return dbData;
+		}
+		return data;
 	}
 
-	public List<PriceModel> ReadDB()
+	public string FetchCurrencies()
 	{
-		return new List<PriceModel>();
+		return DataSerializer(_db.FetchCurrencies());
 	}
 
-	public string ReadRedis()
+	public string DataSerializer(Array InputList)
 	{
-		return "";
+		return JsonConvert.SerializeObject(InputList);
+	}
+
+	public void WriteRedis(string key, string value)
+	{
+		_cache.StringSet(key, value);
+	}
+
+	public string? FetchRedis(string key)
+	{
+		string? cachedData = _cache.StringGet(key);
+
+		if (!string.IsNullOrEmpty(cachedData)) return cachedData;
+		else return null;
 	}
 }
 
@@ -28,23 +63,21 @@ class DataBaseIO
 {
 	public Array FetchCurrencies()
 	{
-		using (var db = new DataBaseContext())
-		{
-			var currencyNames = db.Prices.Select(c => c.Currency).Distinct().ToArray();
-			return currencyNames;
-		}
+		using (var db = new DataBaseContext()) { return db.Prices.Select(c => c.Currency).Distinct().ToArray(); }
 	}
-	public List<PriceModel> FetchPrice(string currencyName, DateTime startDate, DateTime endDate)
+
+	public Array FetchPrice(string currencyName, DateTime startDate, DateTime endDate)
 	{
 		using (var db = new DataBaseContext())
 		{
 			var pricesInRange = db.Prices
 			.Where(p => p.Currency == currencyName && p.dateTime >= startDate && p.dateTime <= endDate)
-			.ToList();
+			.ToArray();
 			return pricesInRange;
 		}
 	}
-	public  void WriteDB(Quote currencyQoute)
+
+	public void WriteDB(Quote currencyQoute)
 	{
 		PriceModel priceModel = new PriceModel();
 		priceModel.Currency = currencyQoute.symbol;
@@ -58,15 +91,3 @@ class DataBaseIO
 		}
 	}
 }
-//class RedisIO
-//{
-//	private static IDatabase db;
-//	private static void Initialize()
-//	{
-//		ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379");
-//		db = redis.GetDatabase(); 
-//	}
-//	private void SetData(string key,string value)	{db.StringSet(key, value);}
-
-//	private string? GetData(string key)	{return db.StringGet(key);}
-//}

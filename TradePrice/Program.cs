@@ -14,7 +14,7 @@ class Program
 	static public async Task Main(string[] args)
 	{
 		APIServer api = new APIServer();
-		api.Run();
+		await api.Run();
         await Console.Out.WriteLineAsync("Hello");
         //WSServer webSocket = new WSServer();
         //webSocket.ReceivePrice();
