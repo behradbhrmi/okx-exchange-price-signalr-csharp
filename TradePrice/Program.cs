@@ -21,32 +21,32 @@ class Program
 		APIServer api = new APIServer();
         WSServer webSocket = new WSServer();
 
-		var connection = new HubConnectionBuilder().WithUrl("http://localhost:5000/statushub").Build();
+		//var connection = new HubConnectionBuilder().WithUrl("http://localhost:5000/statushub").Build();
 		
 		var ap =  Task.Run(() => api.Run());
 
 		//var wb = Task.Run(() => webSocket.ReceivePrice());
-		await connection.StartAsync();
+		//await connection.StartAsync();
 
-		var sig = Task.Run(()=>
-		{
-			int num = 0;
-			while (true)
-			{
-				num++;
-				if (num % 2 == 0)
-					connection.InvokeAsync("UpdateStatus", "HEllo");
+		//var sig = Task.Run(()=>
+		//{
+		//	int num = 0;
+		//	while (true)
+		//	{
+		//		num++;
+		//		if (num % 2 == 0)
+		//			connection.InvokeAsync("UpdateStatus", "HEllo");
 
-				//Console.WriteLine("Even");
-				else
-                    connection.InvokeAsync("UpdateStatus", "Bye Bye");
-                Thread.Sleep(2000);
+		//		//Console.WriteLine("Even");
+		//		else
+  //                  connection.InvokeAsync("UpdateStatus", "Bye Bye");
+  //              Thread.Sleep(2000);
 				
 
-			}
-		});
+		//	}
+		//});
 
 
-		await Task.WhenAll(ap, sig);
+		await Task.WhenAll(ap);
     }
 }

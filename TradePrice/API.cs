@@ -40,49 +40,48 @@ class APIServer
 
         app.UseRouting();
 
-        app.MapHub<StatusHub>("/statushub");
+        //app.MapHub<StatusHub>("/statushub");
         app.MapControllers();
 
-        
-        //      app.UseEndpoints(endpoints =>
-        //{
+
+        app.UseEndpoints(endpoints =>
+        {
 
 
-        //	//endpoints.MapGet("/fetch", (HttpContext httpContext) =>
-        //	//{
+          endpoints.MapGet("/fetch", (HttpContext httpContext) =>
+          {
 
 
-        //	//	string? currencyName = httpContext.Request.Query["currencyName"];
-
-
-
-        //	//	string? startDate = httpContext.Request.Query["startDate"];
-
-
-        //	//	string? endDate = httpContext.Request.Query["endDate"];
-
-        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+              string? currencyName = httpContext.Request.Query["currencyName"];
 
 
 
-        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
+              string? startDate = httpContext.Request.Query["startDate"];
+
+
+              string? endDate = httpContext.Request.Query["endDate"];
+
+              httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
 
 
-        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+              httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
 
 
-        //	//	if (currencyName == null || startDate == null || endDate == null)
-        //	//		return null;
-        //	//	return dbManager.FetchPrice(currencyName, startDate, endDate);
-        //	//});
 
-        //	//endpoints.MapGet("/currencies", (HttpContext httpContext) =>
-        //	//{
-        //	//	return dbManager.FetchCurrencies();
-        //	//});
+              httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
 
-        //});
+
+              if (currencyName == null || startDate == null || endDate == null)
+                  return null;
+              return dbManager.FetchPrice(currencyName, startDate, endDate);
+          });
+
+          endpoints.MapGet("/currencies", (HttpContext httpContext) =>
+          {
+              return dbManager.FetchCurrencies();
+          });
+        });
 
         app.Run();
     }
