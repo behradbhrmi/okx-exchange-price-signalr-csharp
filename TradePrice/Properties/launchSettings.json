@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "csTradePiceWebSocket": {
+      "commandName": "Project",
+      "remoteDebugEnabled": true
+    }
+  }
+}

@@ -14,7 +14,7 @@ class WSServer
 
 	public WSServer()
 	{
-		connection = new HubConnectionBuilder().WithUrl("http://localhost:8080/statushub").Build();
+		connection = new HubConnectionBuilder().WithUrl("http://localhost:5000/statushub").Build();
 		db = new DataBaseIO();
 	}
 
@@ -61,7 +61,7 @@ class WSServer
 							db.WriteDB(result);
 					}
 				});
-				client.Start();
+				await client.Start();
 				exitEvent.WaitOne();
 			}
 		}

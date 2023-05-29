@@ -4,78 +4,86 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using DataBase;
 using SignalR;
+using System.Net;
 
 
 namespace API;
 class APIServer
 {
-	private DBManager dbManager;
+    private DBManager dbManager;
 
-	public APIServer()
-	{
-		dbManager = new DBManager();
-	}
+    public APIServer()
+    {
+        dbManager = new DBManager();
+    }
 
-	public async Task Run()
-	{
-		var builder = WebApplication.CreateBuilder();
+    public void Run()
+    {
+        var builder = WebApplication.CreateBuilder();
 
-		// Add services to the container.
-		builder.Services.AddSignalR();
-		builder.Services.AddCors();
+        // Add services to the container.
+        builder.Services.AddSignalR();
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(builder =>
+            {
+                builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            });
+        });
+        builder.Services.AddControllers();
 
-		var app = builder.Build();
+        var app = builder.Build();
 
-		app.UseCors(builder =>
-		{
-			builder.AllowAnyOrigin()
-				   .AllowAnyMethod()
-				   .AllowAnyHeader();
-		});
+        app.UseCors();
 
-		app.UseRouting();
-		
+        app.UseRouting();
 
-		app.UseEndpoints(endpoints =>
-		{
-			endpoints.MapHub<StatusHub>("/statushub");
+        app.MapHub<StatusHub>("/statushub");
+        app.MapControllers();
 
-			endpoints.MapGet("/fetch", (HttpContext httpContext) =>
-			{
-
-
-				string? currencyName = httpContext.Request.Query["currencyName"];
-
-
-
-				string? startDate = httpContext.Request.Query["startDate"];
+        
+        //      app.UseEndpoints(endpoints =>
+        //{
 
 
-				string? endDate = httpContext.Request.Query["endDate"];
+        //	//endpoints.MapGet("/fetch", (HttpContext httpContext) =>
+        //	//{
 
-				httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
+        //	//	string? currencyName = httpContext.Request.Query["currencyName"];
 
 
 
-				httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
+        //	//	string? startDate = httpContext.Request.Query["startDate"];
+
+
+        //	//	string? endDate = httpContext.Request.Query["endDate"];
+
+        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
 
 
-				httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
 
 
-				if (currencyName == null || startDate == null || endDate == null)
-					return null;
-				return dbManager.FetchPrice(currencyName, startDate, endDate);
-			});
 
-			endpoints.MapGet("/currencies", (HttpContext httpContext) =>
-			{
-				return dbManager.FetchCurrencies();
-			});
+        //	//	httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
 
-		});
 
-		app.Run();
-	}
+        //	//	if (currencyName == null || startDate == null || endDate == null)
+        //	//		return null;
+        //	//	return dbManager.FetchPrice(currencyName, startDate, endDate);
+        //	//});
+
+        //	//endpoints.MapGet("/currencies", (HttpContext httpContext) =>
+        //	//{
+        //	//	return dbManager.FetchCurrencies();
+        //	//});
+
+        //});
+
+        app.Run();
+    }
 }
