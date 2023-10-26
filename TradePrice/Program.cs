@@ -1,9 +1,9 @@
-﻿using API;
+﻿using csTradePiceWebSocket.API;
+using csTradePiceWebSocket.WebSocket;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Runtime.CompilerServices;
-using WebSocket;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
 
 public class Quote
 {
@@ -21,28 +21,23 @@ class Program
 		APIServer api = new APIServer();
         WSServer webSocket = new WSServer();
 
-		//var connection = new HubConnectionBuilder().WithUrl("http://localhost:5000/statushub").Build();
 		
 		var ap =  Task.Run(() => api.Run());
 
 		//var wb = Task.Run(() => webSocket.ReceivePrice());
-		//await connection.StartAsync();
 
-		//var sig = Task.Run(()=>
+
+		//var connection = new HubConnectionBuilder().WithUrl("http://localhost:5000/statushub").Build();
+		//await connection.StartAsync();
+		//var sig = Task.Run(() =>
 		//{
 		//	int num = 0;
 		//	while (true)
 		//	{
 		//		num++;
-		//		if (num % 2 == 0)
-		//			connection.InvokeAsync("UpdateStatus", "HEllo");
-
-		//		//Console.WriteLine("Even");
-		//		else
-  //                  connection.InvokeAsync("UpdateStatus", "Bye Bye");
-  //              Thread.Sleep(2000);
-				
-
+		//		if (num % 2 == 0) connection.InvokeAsync("UpdateStatus", "HEllo");
+		//		else connection.InvokeAsync("UpdateStatus", "Bye Bye");
+		//		Thread.Sleep(2000);
 		//	}
 		//});
 
